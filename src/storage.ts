@@ -86,3 +86,13 @@ export function getAllTags(data: VaultData): string[] {
 export function getAllCategories(data: VaultData): string[] {
   return [...new Set(data.map(e => e.category).filter(Boolean))].sort();
 }
+
+export function getAllTags(data: VaultData): string[] {
+  const tags = new Set<string>();
+  for (const e of data) for (const t of e.tags) tags.add(t);
+  return [...tags].sort();
+}
+
+export function getAllCategories(data: VaultData): string[] {
+  return [...new Set(data.map(e => e.category).filter(Boolean))].sort();
+}
