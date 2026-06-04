@@ -195,3 +195,5 @@ server.listen(PORT, HOST, () => {
 });
 // TODO: PATCH /api/entries/:id/favorite — toggle favorite status
 // Implement as: update entry with { favorite: !entry.favorite }
+// TODO: PATCH /api/entries/:id/favorite — toggle favorite status
+// Implement as: update entry with { favorite: !entry.favorite }
