@@ -1,106 +1,82 @@
-# localvault
+# 🔐 localvault
 
-> Self-hosted password manager. AES-256 encryption, runs on localhost, zero cloud, zero subscription, zero account. Your data stays on your machine.
+[![Build Status](https://img.shields.io/github/actions/workflow/status/HayreBuilds/localvault/ci.yml?branch=main)](https://github.com/HayreBuilds/localvault/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Security: AES-256](https://img.shields.io/badge/Security-AES--256-blue.svg)](https://github.com/HayreBuilds/localvault)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/HayreBuilds/localvault/pulls)
 
-```
-$ npx localvault
+**Self-hosted password manager with zero external dependencies. Encrypted, local-first, and private.**
 
-  ◆ localvault — running at http://127.0.0.1:8765
-  Your vault is at ~/.localvault/vault.enc
-  Open your browser to get started.
-```
-
-Then set a master password and start storing passwords. Everything is encrypted on your machine with AES-256-GCM + PBKDF2.
+> Don't trust the cloud with your master password? **localvault** is a minimalist, secure vault that runs entirely on your localhost. No account, no subscription, no trackers.
 
 ---
 
-## Install
+## 🚀 Quick Start
 
 ```bash
-# Run immediately (no install)
+# Start your local vault
 npx localvault
-
-# Install globally
-npm install -g localvault
-localvault
 ```
 
-Open http://127.0.0.1:8765 in your browser.
+1. Open **[http://localhost:3000](http://localhost:3000)**
+2. Set your **Master Password** (This is never stored, only used to derive your encryption key).
+3. Start saving your secrets securely.
 
-## Features
+---
 
-- 🔐 **AES-256-GCM encryption** — industry-standard authenticated encryption
-- 🔑 **PBKDF2 key derivation** — 100,000 iterations, per-vault random salt
-- 🚫 **Zero cloud** — all data stays in `~/.localvault/vault.enc`
-- 🔒 **Session-based auth** — vault auto-locks after 30 minutes of inactivity
-- 🔍 **Search** — instant search across titles, usernames, URLs, tags
-- 📂 **Categories** — organize passwords into custom categories
-- ⭐ **Favorites** — star important entries
-- 🔑 **Password generator** — cryptographically random, configurable length and character sets
-- 📥 **CSV export** — backup your data anytime
-- ✏️ **Full CRUD** — add, edit, delete entries with a clean UI
+## ✨ Key Features
 
-## Security Design
+- **🛡️ Military-Grade Encryption**: Uses AES-256-GCM with PBKDF2 key derivation.
+- **🏠 100% Offline**: No internet connection required. Your data never leaves your machine.
+- **🎨 Minimalist UI**: A clean, dark-themed web interface for managing your passwords.
+- **🏷️ Smart Organization**: Tag and categorize your entries for instant searching.
+- **📦 Easy Backup**: Export your vault to an encrypted file or plain CSV.
+- **⚡ Zero Dependencies**: Built with pure Node.js and vanilla JS. No `node_modules` required to run.
 
-```
-Master Password
-     ↓
-PBKDF2 (SHA-256, 100,000 iterations, 32-byte random salt)
-     ↓
-AES-256-GCM Key
-     ↓
-Encrypted vault (salt + IV + auth tag + ciphertext)
-     ↓
-~/.localvault/vault.enc
-```
+---
 
-- The master password **never leaves your machine**
-- The vault file contains everything needed to decrypt (salt, IV, auth tag) but is useless without the password
-- Sessions expire after 30 minutes; the server holds the in-memory key during that window
-- All data is served only on `127.0.0.1` — not accessible from the network
-- No telemetry, no analytics, no external connections
-
-## API
-
-localvault exposes a local REST API (for scripts, CLI access, etc.):
+## 💻 Installation
 
 ```bash
-# Check vault status
-curl http://127.0.0.1:8765/api/status
-
-# Unlock vault
-curl -X POST http://127.0.0.1:8765/api/unlock \
-  -H "Content-Type: application/json" \
-  -d '{"password": "your-master-password"}'
-
-# Search entries
-curl -H "Authorization: Bearer <token>" \
-  "http://127.0.0.1:8765/api/entries?q=github"
-
-# Generate a password
-curl "http://127.0.0.1:8765/api/generate-password?length=32"
-
-# Export to CSV
-curl -H "Authorization: Bearer <token>" \
-  "http://127.0.0.1:8765/api/export/csv" > backup.csv
+npm install -g localvault
 ```
 
-## Data Location
+---
 
-Your encrypted vault is stored at:
-- **macOS / Linux:** `~/.localvault/vault.enc`
-- **Windows:** `%USERPROFILE%\.localvault\vault.enc`
+## 🛠️ Usage
 
-Back this file up regularly. Without the master password, it cannot be decrypted.
+### Store Secrets
+Add websites, usernames, and passwords. Generate strong, random passwords with the built-in generator.
 
-## Why Not Just Use...
+### Search & Organize
+Use the sidebar to filter by tags (e.g., `Work`, `Finance`, `Social`) or use the instant search bar.
 
-- **LastPass** — Cloud-based, has been breached multiple times
-- **1Password** — $36/year subscription, cloud-dependent
-- **Bitwarden** — Excellent, but requires an account and server
-- **KeePass** — Great but desktop-only with complex sync story
-- **localvault** — Zero trust, zero account, zero subscription, zero cloud
+### Security Audit
+View a dashboard of your password strength and get alerts for reused or weak passwords.
 
-## License
+---
 
-MIT
+## 🔍 Security Design
+
+1. **Zero-Knowledge**: Your Master Password is never saved to disk.
+2. **Key Derivation**: We use 100,000 iterations of PBKDF2 to turn your password into a 256-bit key.
+3. **GCM Mode**: Every entry is encrypted with a unique IV (Initialization Vector) for authenticated encryption.
+4. **Local Only**: The server only listens on `127.0.0.1`, making it inaccessible from your network.
+
+---
+
+## 🤝 Contributing
+
+Security is a community effort. Please see our [Contributing Guide](CONTRIBUTING.md) and [Security Policy](SECURITY.md).
+
+---
+
+## 📄 License
+
+Distributed under the MIT License. See `LICENSE` for more information.
+
+---
+
+## 💖 Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=HayreBuilds/localvault&type=Date)](https://star-history.com/#HayreBuilds/localvault&Date)
