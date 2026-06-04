@@ -1,0 +1,19 @@
+{
+  "name": "localvault",
+  "version": "1.0.0",
+  "description": "Self-hosted password manager — AES-256 encryption, runs on localhost, zero cloud, zero subscription. Your data stays yours.",
+  "bin": { "localvault": "./dist/server.js" },
+  "main": "./dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "ts-node src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": ["password-manager", "self-hosted", "security", "localhost", "privacy", "aes-256"],
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": { "@types/node": "^22.0.0", "typescript": "^5.5.0" },
+  "engines": { "node": ">=18.0.0" }
+}
