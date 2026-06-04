@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LocalVault — Password Manager</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0f0f15;--surface:#1a1a2e;--card:#1f2040;--border:#2a2a4a;--accent:#6c63ff;--accent2:#a78bfa;--text:#e2e8f0;--dim:#94a3b8;--green:#10b981;--red:#ef4444;--yellow:#f59e0b}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh}
+.app{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:260px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px 0;flex-shrink:0}
+.logo{padding:0 20px 20px;font-size:1.2em;font-weight:700;color:var(--accent2)}
+.logo span{color:var(--dim);font-weight:400}
+.nav-item{padding:10px 20px;cursor:pointer;border-radius:0;display:flex;align-items:center;gap:10px;color:var(--dim);transition:all .2s}
+.nav-item:hover,.nav-item.active{background:var(--card);color:var(--text)}
+.nav-item.active{border-left:3px solid var(--accent)}
+.main{flex:1;overflow:auto;padding:30px}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.header h1{font-size:1.4em;font-weight:600}
+.btn{padding:10px 18px;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;transition:all .2s}
+.btn-primary{background:var(--accent);color:white}.btn-primary:hover{background:var(--accent2)}
+.btn-ghost{background:transparent;color:var(--dim);border:1px solid var(--border)}.btn-ghost:hover{color:var(--text);border-color:var(--accent)}
+.btn-danger{background:transparent;color:var(--red);border:1px solid var(--red)}.btn-danger:hover{background:var(--red);color:white}
+.search{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 16px;color:var(--text);font-size:14px;width:300px;outline:none}
+.search:focus{border-color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;cursor:pointer;transition:all .2s;position:relative}
+.card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.card-title{font-weight:600;margin-bottom:6px;font-size:1em;display:flex;align-items:center;gap:8px}
+.card-meta{color:var(--dim);font-size:13px}
+.card-url{color:var(--accent2);font-size:12px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.category-badge{font-size:11px;padding:2px 8px;border-radius:4px;background:var(--border);color:var(--dim)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px;width:480px;max-height:90vh;overflow-y:auto}
+.modal h2{margin-bottom:24px;font-size:1.2em}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;margin-bottom:6px;font-size:13px;color:var(--dim)}
+.form-group input,.form-group textarea,.form-group select{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;font-family:inherit}
+.form-group input:focus,.form-group textarea:focus{border-color:var(--accent)}
+.form-group textarea{min-height:80px;resize:vertical}
+.pw-field{position:relative}
+.pw-field input{padding-right:40px;font-family:monospace}
+.pw-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--dim);cursor:pointer;font-size:16px;padding:4px}
+.pw-actions{display:flex;gap:8px;margin-top:6px}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:24px}
+.locked{display:flex;align-items:center;justify-content:center;height:100vh;background:var(--bg)}
+.locked-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:40px;width:380px;text-align:center}
+.locked-card h1{font-size:1.5em;margin-bottom:8px}
+.locked-card p{color:var(--dim);margin-bottom:24px;font-size:14px}
+.locked-card input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;color:var(--text);font-size:15px;text-align:center;outline:none;font-family:monospace;letter-spacing:2px;margin-bottom:16px}
+.locked-card input:focus{border-color:var(--accent)}
+.lock-icon{font-size:3em;margin-bottom:20px}
+.error{color:var(--red);font-size:13px;margin-top:8px}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 18px;font-size:14px;z-index:200;transition:all .3s}
+.toast.show{transform:translateY(0);opacity:1}
+.empty{text-align:center;padding:60px 20px;color:var(--dim)}
+.empty-icon{font-size:3em;margin-bottom:16px}
+.stats{display:flex;gap:16px;margin-bottom:24px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 20px;flex:1}
+.stat-val{font-size:1.8em;font-weight:700;color:var(--accent2)}
+.stat-label{color:var(--dim);font-size:13px;margin-top:4px}
+@media(max-width:768px){.sidebar{display:none}.search{width:200px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+const API = '';
+let token = sessionStorage.getItem('lv_token');
+let entries = [];
+let view = 'all';
+let search = '';
+let editId = null;
+
+async function api(method, path, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(API + path, opts);
+  if (r.status === 204) return null;
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.error || 'Request failed');
+  return d;
+}
+
+function toast(msg, type = 'info') {
+  const t = document.createElement('div');
+  t.className = 'toast show';
+  t.textContent = msg;
+  t.style.borderColor = type === 'error' ? 'var(--red)' : type === 'success' ? 'var(--green)' : 'var(--border)';
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2500);
+}
+
+function copyToClipboard(text, label) {
+  navigator.clipboard.writeText(text).then(() => toast(`${label} copied!`, 'success'));
+}
+
+async function loadEntries() {
+  try {
+    const q = search ? `?q=${encodeURIComponent(search)}` : '';
+    const cat = view !== 'all' && view !== 'favorites' ? `${q ? '&' : '?'}category=${encodeURIComponent(view)}` : '';
+    entries = await api('GET', `/api/entries${q}${cat}`);
+    if (view === 'favorites') entries = entries.filter(e => e.favorite);
+    render();
+  } catch (e) { if (e.message.includes('Unauthorized')) { token = null; sessionStorage.removeItem('lv_token'); renderLocked(); } }
+}
+
+async function genPassword(inputId) {
+  try {
+    const data = await api('GET', '/api/generate-password?length=24&symbols=true');
+    const input = document.getElementById(inputId);
+    if (input) { input.value = data.password; input.type = 'text'; }
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+function renderLocked() {
+  document.getElementById('app').innerHTML = `
+  <div class="locked">
+    <div class="locked-card">
+      <div class="lock-icon">🔒</div>
+      <h1>LocalVault</h1>
+      <p id="locked-desc">${!localStorage.getItem('lv_exists') ? 'Create your master password to get started.' : 'Enter your master password to unlock your vault.'}</p>
+      <input type="password" id="pw-input" placeholder="Master password" autofocus onkeydown="if(event.key==='Enter')doUnlock()">
+      <button class="btn btn-primary" style="width:100%;padding:12px" onclick="doUnlock()">${!localStorage.getItem('lv_exists') ? 'Create Vault' : 'Unlock'}</button>
+      <div class="error" id="lock-error"></div>
+    </div>
+  </div>`;
+}
+
+async function doUnlock() {
+  const pw = document.getElementById('pw-input').value;
+  if (!pw || pw.length < 8) { document.getElementById('lock-error').textContent = 'Password must be at least 8 characters'; return; }
+  try {
+    const status = await api('GET', '/api/status');
+    if (!status.exists) {
+      const data = await api('POST', '/api/setup', { password: pw });
+      token = data.token; localStorage.setItem('lv_exists', '1');
+    } else {
+      const data = await api('POST', '/api/unlock', { password: pw });
+      token = data.token;
+    }
+    sessionStorage.setItem('lv_token', token);
+    await loadEntries();
+  } catch (e) { document.getElementById('lock-error').textContent = e.message; }
+}
+
+function render() {
+  const cats = [...new Set(entries.map(e => e.category).filter(Boolean))];
+  const filtered = entries;
+  const favCount = entries.filter(e => e.favorite).length;
+
+  document.getElementById('app').innerHTML = `
+  <div class="app">
+    <div class="sidebar">
+      <div class="logo">🔐 Local<span>Vault</span></div>
+      <div class="nav-item ${view==='all'?'active':''}" onclick="setView('all')">🗂 All Passwords <span style="margin-left:auto;font-size:12px;color:var(--dim)">${entries.length}</span></div>
+      <div class="nav-item ${view==='favorites'?'active':''}" onclick="setView('favorites')">⭐ Favorites <span style="margin-left:auto;font-size:12px;color:var(--dim)">${favCount}</span></div>
+      <div style="padding:10px 20px;font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-top:10px">Categories</div>
+      ${cats.map(c => `<div class="nav-item ${view===c?'active':''}" onclick="setView('${c}')">${c} <span style="margin-left:auto;font-size:12px;color:var(--dim)">${entries.filter(e=>e.category===c).length}</span></div>`).join('')}
+      <div style="flex:1"></div>
+      <div class="nav-item" onclick="doLock()">🔒 Lock Vault</div>
+      <div class="nav-item" onclick="doExport()">📥 Export CSV</div>
+    </div>
+    <div class="main">
+      <div class="header">
+        <h1>${view === 'all' ? 'All Passwords' : view === 'favorites' ? 'Favorites' : view}</h1>
+        <div style="display:flex;gap:10px;align-items:center">
+          <input class="search" placeholder="Search..." value="${search}" oninput="setSearch(this.value)">
+          <button class="btn btn-primary" onclick="showAdd()">+ Add</button>
+        </div>
+      </div>
+      ${filtered.length === 0 ? `<div class="empty"><div class="empty-icon">🔐</div><p>No passwords yet.</p><br><button class="btn btn-primary" onclick="showAdd()">Add your first password</button></div>` :
+      `<div class="grid">${filtered.map(e => `
+        <div class="card" onclick="showEdit('${e.id}')">
+          <div class="card-title">
+            <span>${e.favorite ? '⭐ ' : ''}${e.title}</span>
+            <span class="category-badge">${e.category || 'General'}</span>
+          </div>
+          <div class="card-meta">${e.username || '—'}</div>
+          ${e.url ? `<div class="card-url">${e.url}</div>` : ''}
+          <div style="margin-top:12px;display:flex;gap:8px">
+            <button class="btn btn-ghost" style="font-size:12px;padding:6px 10px" onclick="event.stopPropagation();copyToClipboard('${e.username}','Username')">Copy User</button>
+            <button class="btn btn-ghost" style="font-size:12px;padding:6px 10px" onclick="event.stopPropagation();copyPw('${e.id}')">Copy PW</button>
+          </div>
+        </div>`).join('')}</div>`}
+    </div>
+  </div>`;
+}
+
+function setView(v) { view = v; loadEntries(); }
+function setSearch(s) { search = s; loadEntries(); }
+
+async function doLock() {
+  try { await api('POST', '/api/lock'); } catch {}
+  token = null; sessionStorage.removeItem('lv_token'); renderLocked();
+}
+
+async function doExport() {
+  window.location.href = API + '/api/export/csv';
+}
+
+async function copyPw(id) {
+  try {
+    const entry = await api('GET', `/api/entries/${id}`);
+    copyToClipboard(entry.password, 'Password');
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+function showAdd() {
+  editId = null;
+  showModal({ title:'', username:'', password:'', url:'', notes:'', category:'General', tags:[] });
+}
+
+async function showEdit(id) {
+  try {
+    const entry = await api('GET', `/api/entries/${id}`);
+    editId = id;
+    showModal(entry);
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+function showModal(entry) {
+  const isnew = !entry.id;
+  document.body.insertAdjacentHTML('beforeend', `
+  <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <h2>${isnew ? 'Add Password' : 'Edit Password'}</h2>
+      <div class="form-group"><label>Title *</label><input id="f-title" value="${entry.title||''}"></div>
+      <div class="form-group"><label>Username / Email</label><input id="f-user" value="${entry.username||''}"></div>
+      <div class="form-group"><label>Password</label>
+        <div class="pw-field">
+          <input id="f-pw" type="password" value="${entry.password||''}" style="font-family:monospace">
+          <button class="pw-toggle" onclick="togglePw()">👁</button>
+        </div>
+        <div class="pw-actions">
+          <button class="btn btn-ghost" style="font-size:12px;padding:6px 10px" onclick="genPassword('f-pw')">Generate</button>
+          <button class="btn btn-ghost" style="font-size:12px;padding:6px 10px" onclick="copyToClipboard(document.getElementById('f-pw').value,'Password')">Copy</button>
+        </div>
+      </div>
+      <div class="form-group"><label>URL</label><input id="f-url" value="${entry.url||''}"></div>
+      <div class="form-group"><label>Category</label>
+        <input id="f-cat" value="${entry.category||'General'}">
+      </div>
+      <div class="form-group"><label>Notes</label><textarea id="f-notes">${entry.notes||''}</textarea></div>
+      <div class="modal-footer">
+        ${editId ? `<button class="btn btn-danger" onclick="deleteEntry('${editId}')">Delete</button><div style="flex:1"></div>` : ''}
+        <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveEntry()">Save</button>
+      </div>
+    </div>
+  </div>`);
+  document.getElementById('f-title').focus();
+}
+
+function togglePw() {
+  const inp = document.getElementById('f-pw');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+function closeModal() { document.querySelector('.modal-overlay')?.remove(); }
+
+async function saveEntry() {
+  const payload = {
+    title: document.getElementById('f-title').value,
+    username: document.getElementById('f-user').value,
+    password: document.getElementById('f-pw').value,
+    url: document.getElementById('f-url').value,
+    category: document.getElementById('f-cat').value || 'General',
+    notes: document.getElementById('f-notes').value,
+    tags: [],
+  };
+  if (!payload.title) { toast('Title is required', 'error'); return; }
+  try {
+    if (editId) await api('PUT', `/api/entries/${editId}`, payload);
+    else await api('POST', '/api/entries', payload);
+    closeModal(); toast('Saved!', 'success'); loadEntries();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function deleteEntry(id) {
+  if (!confirm('Delete this entry?')) return;
+  try { await api('DELETE', `/api/entries/${id}`); closeModal(); toast('Deleted', 'success'); loadEntries(); }
+  catch (e) { toast(e.message, 'error'); }
+}
+
+// Init
+(async () => {
+  try {
+    const status = await api('GET', '/api/status');
+    if (!status.exists) { localStorage.removeItem('lv_exists'); }
+    else { localStorage.setItem('lv_exists', '1'); }
+  } catch {}
+  if (!token) { renderLocked(); return; }
+  try { await loadEntries(); } catch { token = null; sessionStorage.removeItem('lv_token'); renderLocked(); }
+})();
+</script>
+</body>
+</html>
