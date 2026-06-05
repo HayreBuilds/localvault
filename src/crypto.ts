@@ -78,26 +78,7 @@ export function checkPasswordStrength(password: string): PasswordStrength {
   if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score++; else suggestions.push("Mix upper and lowercase letters");
   if (/[0-9]/.test(password)) score++; else suggestions.push("Add numbers");
   if (/[^A-Za-z0-9]/.test(password)) score++; else suggestions.push("Add symbols");
-  score = Math.min(4, score) as 0|1|2|3|4;
+  const s = Math.min(4, score) as 0|1|2|3|4;
   const labels: Array<PasswordStrength["label"]> = ["Very Weak","Weak","Fair","Strong","Very Strong"];
-  return { score, label: labels[score]!, suggestions };
-}
-
-export interface PasswordStrength {
-  score: 0 | 1 | 2 | 3 | 4;
-  label: "Very Weak" | "Weak" | "Fair" | "Strong" | "Very Strong";
-  suggestions: string[];
-}
-
-export function checkPasswordStrength(password: string): PasswordStrength {
-  let score = 0;
-  const suggestions: string[] = [];
-  if (password.length >= 12) score++; else suggestions.push("Use at least 12 characters");
-  if (password.length >= 20) score++;
-  if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score++; else suggestions.push("Mix upper and lowercase letters");
-  if (/[0-9]/.test(password)) score++; else suggestions.push("Add numbers");
-  if (/[^A-Za-z0-9]/.test(password)) score++; else suggestions.push("Add symbols");
-  score = Math.min(4, score) as 0|1|2|3|4;
-  const labels: Array<PasswordStrength["label"]> = ["Very Weak","Weak","Fair","Strong","Very Strong"];
-  return { score, label: labels[score]!, suggestions };
+  return { score: s, label: labels[s]!, suggestions };
 }
